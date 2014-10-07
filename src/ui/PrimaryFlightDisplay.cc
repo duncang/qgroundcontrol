@@ -9,6 +9,7 @@
 #include <QPainterPath>
 #include <QResizeEvent>
 #include <QtCore/qmath.h>
+#include <iostream>
 
 static const float LINEWIDTH = 0.0036f;
 static const float SMALL_TEXT_SIZE = 0.028f;
@@ -899,6 +900,7 @@ void PrimaryFlightDisplay::drawAltimeter(
 
     float primaryAltitude = altitudeWGS84;
     float secondaryAltitude = 0;
+    float altitudeError = navigationAltitudeError;
 
     painter.resetTransform();
     fillInstrumentBackground(painter, area);
@@ -1016,6 +1018,31 @@ void PrimaryFlightDisplay::drawAltimeter(
         QString s_salt;
         s_salt.sprintf("%3.0f", secondaryAltitude);
         drawTextCenter(painter, s_salt, mediumTextSize, 0, 0);
+    }
+
+    // draw commanded altitude bug
+    if (1 /* bug within scale */)
+    {
+        QPainterPath bugPath(QPoint(markerTip, 0));
+        bugPath.lineTo(markerTip+markerHalfHeight, markerHalfHeight);
+        bugPath.lineTo(leftEdge, markerHalfHeight);
+        bugPath.lineTo(leftEdge, -markerHalfHeight);
+        bugPath.lineTo(markerTip+markerHalfHeight, -markerHalfHeight);
+        bugPath.closeSubpath();
+
+        // find pixel offset
+        float y = altitudeError*effectiveHalfHeight/(ALTIMETER_LINEAR_SPAN/2);
+        std::cerr << __FILE__ << __LINE__ << " altitudeError: " << altitudeError << "; y=" << y << std::endl;
+
+        painter.resetTransform();
+        painter.translate(area.left(), area.center().y() + y);
+
+        pen.setWidthF(lineWidth);
+        pen.setColor(Qt::magenta);
+        painter.setPen(pen);
+
+        painter.setBrush(Qt::SolidPattern);
+        painter.drawPath(bugPath);
     }
 }
 
