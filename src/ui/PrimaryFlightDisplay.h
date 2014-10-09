@@ -18,6 +18,8 @@ public slots:
     /** @brief Attitude from one specific component / redundant autopilot */
     void updateAttitude(UASInterface* uas, int component, double roll, double pitch, double yaw, quint64 timestamp);
 
+    void updateAttitudeThrustTarget(UASInterface* uas, float roll, float pitch, float yaw, float thrust, quint64 timestamp);
+
     void updateSpeed(UASInterface* uas, double _groundSpeed, double _airSpeed, quint64 timestamp);
     void updateAltitude(UASInterface* uas, double _altitudeAMSL, double _altitudeWGS84, double _altitudeRelative, double _climbRate, quint64 timestamp);
     void updateNavigationControllerErrors(UASInterface* uas, double altitudeError, double speedError, double xtrackError);
@@ -102,6 +104,12 @@ private:
     float roll;
     float pitch;
     float heading;
+
+    float roll_setpoint;
+    float pitch_setpoint;
+    float heading_setpoint;
+    float thrust_setpoint;
+
 
     float altitudeAMSL;
     float altitudeWGS84;

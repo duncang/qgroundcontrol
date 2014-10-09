@@ -244,7 +244,7 @@ void PrimaryFlightDisplay::setActiveUAS(UASInterface* uas)
         connect(uas, SIGNAL(speedChanged(UASInterface*, double, double, quint64)), this, SLOT(updateSpeed(UASInterface*, double, double, quint64)));
         connect(uas, SIGNAL(altitudeChanged(UASInterface*, double, double, double, double, quint64)), this, SLOT(updateAltitude(UASInterface*, double, double, double, double, quint64)));
         connect(uas, SIGNAL(navigationControllerErrorsChanged(UASInterface*, double, double, double)), this, SLOT(updateNavigationControllerErrors(UASInterface*, double, double, double)));
-
+        connect(uas, SIGNAL(attitudeThrustSetPointChanged(UASInterface*,float,float,float,float,quint64)), this, SLOT(updateAttitudeThrustTarget(UASInterface*, float, float, float, float, quint64)));
         // Set new UAS
         this->uas = uas;
     }
@@ -351,6 +351,17 @@ void PrimaryFlightDisplay::updateNavigationControllerErrors(UASInterface* uas, d
     this->navigationAltitudeError = altitudeError;
     this->navigationSpeedError = speedError;
     this->navigationCrosstrackError = xtrackError;
+}
+
+void PrimaryFlightDisplay::updateAttitudeThrustTarget(UASInterface* uas, float roll, float pitch, float yaw, float thrust, quint64 timestamp)
+{
+    Q_UNUSED(uas);
+    Q_UNUSED(timestamp);
+    this->roll_setpoint = roll;
+    this->pitch_setpoint = pitch;
+    this->heading_setpoint = yaw;
+    this->thrust_setpoint = thrust;
+
 }
 
 
@@ -824,6 +835,23 @@ void PrimaryFlightDisplay::drawAICompassDisk(QPainter& painter, QRectF area, flo
         painter.resetTransform();
     }
 
+    // draw heading bug
+;
+    if (1 /* draw bug */)
+    {
+        QPen bugPen(Qt::magenta);
+        bugPen.setWidthF(fineLineWidth);
+        painter.setPen(bugPen);
+
+        painter.translate(area.center());
+        painter.rotate(heading_setpoint);
+
+        painter.drawLine(0,-radius,0,-innerRadius);
+
+        painter.resetTransform();
+
+    }
+
     painter.setPen(scalePen);
     painter.translate(area.center());
     QPainterPath markerPath(QPointF(0, -radius-2));
@@ -1032,7 +1060,6 @@ void PrimaryFlightDisplay::drawAltimeter(
 
         // find pixel offset
         float y = altitudeError*effectiveHalfHeight/(ALTIMETER_LINEAR_SPAN/2);
-        std::cerr << __FILE__ << __LINE__ << " altitudeError: " << altitudeError << "; y=" << y << std::endl;
 
         painter.resetTransform();
         painter.translate(area.left(), area.center().y() + y);
